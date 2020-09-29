@@ -1,0 +1,150 @@
+from dataset.mydataset import *
+from model.resnet import *
+import torch.optim as optim
+import time
+from utils import *
+from tensorboardX import SummaryWriter
+from cfg import *
+
+
+def _main():
+    splitter = TrainValSplitter(imgs_path_root="/home/liuzhian/hdd/datasets/hualu-cup/train")
+    train_samples, val_samples = splitter.setup()
+
+    dataset_train = MyDataset(train_samples, transforms=train_transforms)
+    dataset_val = MyDataset(val_samples, transforms=test_transforms)
+
+    dataloader_train = DataLoader(dataset_train, shuffle=True, batch_size=BATCH_SIZE)
+    STEPS_PER_EPOCH = len(dataloader_train)
+    TOTAL_STEPS = NUM_EPOCHS * STEPS_PER_EPOCH
+
+    dataloader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE)
+
+    # 可视化
+    # vis_dataset(dataset_train, 25)
+
+    model = MyResNet("resnet101", pretrained=PRETRAIN, num_classes=3).to(DEVICE)
+
+    criterion = nn.CrossEntropyLoss().to(DEVICE)
+
+    params_to_update = model.parameters()
+    print("Params to learn:")
+    if PRETRAIN:
+        params_to_update = []
+        for name, param in model.named_parameters():
+            if param.requires_grad == True:
+                params_to_update.append(param)
+                print("\t", name)
+    else:
+        for name, param in model.named_parameters():
+            if param.requires_grad == True:
+                print("\t", name)
+
+    # Observe that all parameters are being optimized
+    optimizer = optim.SGD(params_to_update, lr=START_LR, momentum=0.9)
+
+    # optimizer = optim.Adam(model.parameters(), lr=START_LR)
+
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=NUM_EPOCHS)
+
+    best_valid_loss = float('inf')
+
+    writter = SummaryWriter(log_dir="./logs/v03")
+    for epoch in range(NUM_EPOCHS):
+
+        start_time = time.monotonic()
+
+        writter.add_scalar("lr", lr_scheduler.get_last_lr()[0], epoch)
+
+        train_loss, train_acc_1, train_acc_2 = train(model, dataloader_train, optimizer, criterion, DEVICE)
+        writter.add_scalar("loss/train_loss", train_loss, global_step=epoch)
+        writter.add_scalar("loss/train_acc_1", train_acc_1, global_step=epoch)
+        writter.add_scalar("loss/train_acc_2", train_acc_2, global_step=epoch)
+
+        lr_scheduler.step()
+
+        valid_loss, valid_acc_1, valid_acc_2 = evaluate(model, dataloader_val, criterion, DEVICE)
+        writter.add_scalar("loss/valid_loss", valid_loss, global_step=epoch)
+        writter.add_scalar("loss/valid_acc_1", valid_acc_1, global_step=epoch)
+        writter.add_scalar("loss/valid_acc_2", valid_acc_2, global_step=epoch)
+
+        if valid_loss < best_valid_loss:
+            best_valid_loss = valid_loss
+            save_dict = dict(model=model.state_dict(), optimizer=optimizer.state_dict())
+            torch.save(save_dict, 'pretrained-resnet101-best-model.pt')
+
+        end_time = time.monotonic()
+        epoch_mins, epoch_secs = epoch_time(start_time, end_time)
+
+        print(f'Epoch: {epoch + 1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s')
+        print(f'\tTrain Loss: {train_loss:.3f} | Train Acc @1: {train_acc_1 * 100:6.2f}% | '
+              f'Train Acc @2: {train_acc_2 * 100:6.2f}%')
+        print(f'\tValid Loss: {valid_loss:.3f} | Valid Acc @1: {valid_acc_1 * 100:6.2f}% | '
+              f'Valid Acc @2: {valid_acc_2 * 100:6.2f}%')
+
+
+def train(model, dataloader, optimizer, criterion, DEVICE):
+    epoch_loss = 0
+    epoch_acc_1 = 0
+    epoch_acc_2 = 0
+
+    model.train()
+
+    for idx, (x, y) in enumerate(dataloader):
+        x = x.to(DEVICE)
+        y = y.to(DEVICE)
+
+        optimizer.zero_grad()
+
+        y_pred = model(x)
+
+        loss = criterion(y_pred, y)
+
+        acc_1, acc_2 = calculate_topk_accuracy(y_pred, y.unsqueeze(dim=-1))
+
+        loss.backward()
+
+        optimizer.step()
+
+        epoch_loss += loss.item()
+        epoch_acc_1 += acc_1.item()
+        epoch_acc_2 += acc_2.item()
+
+    epoch_loss /= len(dataloader)
+    epoch_acc_1 /= len(dataloader)
+    epoch_acc_2 /= len(dataloader)
+
+    return epoch_loss, epoch_acc_1, epoch_acc_2
+
+
+def evaluate(model, dataloader, criterion, DEVICE):
+    epoch_loss = 0
+    epoch_acc_1 = 0
+    epoch_acc_2 = 0
+
+    model.eval()
+
+    with torch.no_grad():
+        for (x, y) in dataloader:
+            x = x.to(DEVICE)
+            y = y.to(DEVICE)
+
+            y_pred = model(x)
+
+            loss = criterion(y_pred, y)
+
+            acc_1, acc_2 = calculate_topk_accuracy(y_pred, y.unsqueeze(dim=-1))
+
+            epoch_loss += loss.item()
+            epoch_acc_1 += acc_1.item()
+            epoch_acc_2 += acc_2.item()
+
+    epoch_loss /= len(dataloader)
+    epoch_acc_1 /= len(dataloader)
+    epoch_acc_2 /= len(dataloader)
+
+    return epoch_loss, epoch_acc_1, epoch_acc_2
+
+
+if __name__ == '__main__':
+    _main()

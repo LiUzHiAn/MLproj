@@ -1,0 +1,11 @@
+ckpt/
+logs/
+mmdet-cfg/
+mmdet-result/
+
+.idea/
+
+__pycache__/
+*.pt
+*.txt
+*.json
