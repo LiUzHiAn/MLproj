@@ -6,72 +6,42 @@ from utils import *
 import numpy as np
 from PIL import Image
 import cv2
+from pathlib import Path
+
 
 np.random.seed(2020)
 
 
 class TrainValSplitter(object):
-    def __init__(self, imgs_path_root, train_val_split=0.85):
+    def __init__(self, imgs_path_root: str, train_val_split=0.85):
         super(TrainValSplitter, self).__init__()
         self.imgs_path_root = imgs_path_root
         self.train_val_split = train_val_split
 
+
     def setup(self):
-        """准备好图片和对应的label"""
-        normal_imgs = glob.glob(os.path.join(self.imgs_path_root, "normal", "*.jpg"))
-        phone_imgs = glob.glob(os.path.join(self.imgs_path_root, "phone", "*.jpg"))
-        smoke_imgs = glob.glob(os.path.join(self.imgs_path_root, "smoke", "*.jpg"))
-
-        normal_imgs_indexs = np.arange(len(normal_imgs))
-        phone_imgs_indexs = np.arange(len(phone_imgs))
-        smoke_imgs_indexs = np.arange(len(smoke_imgs))
-        np.random.shuffle(normal_imgs_indexs)  # in-place shuffle
-        np.random.shuffle(phone_imgs_indexs)  # in-place shuffle
-        np.random.shuffle(smoke_imgs_indexs)  # in-place shuffle
-
-        train_normal_imgs = [normal_imgs[idx] \
-                             for idx in normal_imgs_indexs[:int(self.train_val_split * len(normal_imgs))]
-                             ]
-        val_normal_imgs = [normal_imgs[idx] \
-                           for idx in normal_imgs_indexs[int(self.train_val_split * len(normal_imgs)):]
-                           ]
-
-        train_phone_imgs = [phone_imgs[idx] \
-                            for idx in phone_imgs_indexs[:int(self.train_val_split * len(phone_imgs))]
-                            ]
-        val_phone_imgs = [phone_imgs[idx] \
-                          for idx in phone_imgs_indexs[int(self.train_val_split * len(phone_imgs)):]
-                          ]
-
-        train_smoke_imgs = [smoke_imgs[idx] \
-                            for idx in smoke_imgs_indexs[:int(self.train_val_split * len(smoke_imgs))]
-                            ]
-        val_smoke_imgs = [smoke_imgs[idx] \
-                          for idx in smoke_imgs_indexs[int(self.train_val_split * len(smoke_imgs)):]
-                          ]
-
+        """prepare image path and correspoding label for the sample"""
         train_samples = []
-        for item in train_normal_imgs:
-            train_samples.append((item, LABEL2INDEX["normal"]))
-        for item in train_phone_imgs:
-            train_samples.append((item, LABEL2INDEX["phone"]))
-        for item in train_smoke_imgs:
-            train_samples.append((item, LABEL2INDEX["smoke"]))
-        train_indexs = np.arange(len(train_samples))
-        np.random.shuffle(train_indexs)
-        train_samples_shuffled = [train_samples[idx] for idx in train_indexs]
-
         val_samples = []
-        for item in val_normal_imgs:
-            val_samples.append((item, LABEL2INDEX["normal"]))
-        for item in val_phone_imgs:
-            val_samples.append((item, LABEL2INDEX["phone"]))
-        for item in val_smoke_imgs:
-            val_samples.append((item, LABEL2INDEX["smoke"]))
-        val_indexs = np.arange(len(val_samples))
-        np.random.shuffle(val_indexs)
-        val_samples_shuffled = [val_samples[idx] for idx in val_indexs]
-        return train_samples_shuffled, val_samples_shuffled
+
+
+        root_path = Path(self.imgs_path_root)
+        sub_classes = [sub_path for sub_path in root_path.iterdir() if sub_path.is_dir()]
+        for sub_class in sub_classes:
+            label = NAME2LABLE[str(sub_class.name)]
+            sub_class_imgs = list(sub_class.glob("*.*"))
+            sub_class_samples = [(img, label) for img in sub_class_imgs]
+
+            print(str(sub_class.name), len(sub_class_samples))
+
+            np.random.shuffle(sub_class_samples)
+            train_samples = train_samples + sub_class_samples[:int(self.train_val_split * len(sub_class_samples))]
+            val_samples = val_samples + sub_class_samples[int(self.train_val_split * len(sub_class_samples)):]
+
+
+        np.random.shuffle(train_samples)
+        np.random.shuffle(val_samples)
+        return train_samples, val_samples
 
 
 class MyDataset(Dataset):
@@ -99,7 +69,7 @@ class MyDataset(Dataset):
             verbose_img[1] = verbose_img[1] * 0.224 + 0.456
             verbose_img[2] = verbose_img[2] * 0.225 + 0.406
             verbose_img = (verbose_img * 255).astype(np.uint8)
-            cv2.imshow(INDEX2LABEL[label], np.transpose(verbose_img, axes=[1, 2, 0])[:, :, ::-1])
+            cv2.imshow(LABLE2NAME[label], np.transpose(verbose_img, axes=[1, 2, 0])[:, :, ::-1])
             cv2.waitKey(0)
             print(path)
 

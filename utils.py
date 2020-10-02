@@ -6,9 +6,9 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
-INDEX2SUBMITLABEL = {0: "normal", 1: "calling", 2: "smoking"}
-INDEX2LABEL = {0: "normal", 1: "phone", 2: "smoke"}
-LABEL2INDEX = {"normal": 0, "phone": 1, "smoke": 2}
+LABLE2SUBMITNAME = {0: "normal", 1: "calling", 2: "smoking"}
+LABLE2NAME = {0: "normal", 1: "phone", 2: "smoke"}
+NAME2LABLE = {"normal": 0, "phone": 1, "smoke": 2}
 
 
 def epoch_time(start_time, end_time):
