@@ -30,7 +30,7 @@ def get_predcitions(model, dataloader, device):
             images.append(x[0].cpu())
             probs.append(y_prob[0].cpu())
 
-            results.append({"image_name": x_path.split('/')[-1], "category": INDEX2SUBMITLABEL[top_pred[0].item()],
+            results.append({"image_name": x_path.split('/')[-1], "category": LABLE2SUBMITNAME[top_pred[0].item()],
                             "score": round(y_prob[0][top_pred[0]].cpu().item(),5)})
 
     images = torch.cat(images, dim=0)
@@ -40,7 +40,7 @@ def get_predcitions(model, dataloader, device):
 
 
 def _main():
-    dataset_test = TestDataset(test_imgs_root="/home/liuzhian/hdd/datasets/hualu-cup/test", transforms=test_transforms)
+    dataset_test = TestDataset(test_imgs_root="./data/test", transforms=test_transforms)
     dataloader_test = DataLoader(dataset_test, batch_size=1)
 
     model = MyResNet("resnet101", pretrained=True, num_classes=3).to(DEVICE)

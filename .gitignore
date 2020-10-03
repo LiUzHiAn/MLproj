@@ -4,8 +4,12 @@ mmdet-cfg/
 mmdet-result/
 
 .idea/
+.vscode/
 
 __pycache__/
 *.pt
 *.txt
 *.json
+*.csv
+data/train
+data/test
