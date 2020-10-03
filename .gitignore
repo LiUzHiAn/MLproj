@@ -3,6 +3,8 @@ logs/
 mmdet-cfg/
 mmdet-result/
 
+vis/gradient_imgs
+
 .idea/
 .vscode/
 
@@ -11,5 +13,6 @@ __pycache__/
 *.txt
 *.json
 *.csv
+
 data/train
 data/test

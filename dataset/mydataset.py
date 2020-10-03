@@ -79,7 +79,7 @@ class MyDataset(Dataset):
 class TestDataset(Dataset):
     def __init__(self, test_imgs_root, transforms=None):
         super(TestDataset, self).__init__()
-        self.imgs = glob.glob(os.path.join(test_imgs_root, "*.jpg"))
+        self.imgs = glob.glob(os.path.join(test_imgs_root, "*.png"))
         self.transforms = transforms
 
     def __len__(self):

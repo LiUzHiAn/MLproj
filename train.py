@@ -5,11 +5,19 @@ import time
 from utils import *
 from tensorboardX import SummaryWriter
 from cfg import *
+import pandas as pd
+from shutil import copyfile
 
 
 def _main():
-    splitter = TrainValSplitter(imgs_path_root="/home/liuzhian/hdd/datasets/hualu-cup/train")
-    train_samples, val_samples = splitter.setup()
+    # splitter = TrainValSplitter(imgs_path_root="./data/train")
+    # train_samples, val_samples = splitter.setup()
+
+    df_train = pd.read_csv('./resources/train.csv')
+    train_samples = [tuple(x) for x in df_train.to_numpy()]
+
+    df_val = pd.read_csv('./resources/val.csv')
+    val_samples = [tuple(x) for x in df_val.to_numpy()]
 
     dataset_train = MyDataset(train_samples, transforms=train_transforms)
     dataset_val = MyDataset(val_samples, transforms=test_transforms)
@@ -28,17 +36,19 @@ def _main():
     criterion = nn.CrossEntropyLoss().to(DEVICE)
 
     params_to_update = model.parameters()
+    # print param to learn (i.e., the unfrozen layers )
     print("Params to learn:")
     if PRETRAIN:
         params_to_update = []
         for name, param in model.named_parameters():
             if param.requires_grad == True:
                 params_to_update.append(param)
-                print("\t", name)
+                # print("\t", name)
     else:
         for name, param in model.named_parameters():
             if param.requires_grad == True:
-                print("\t", name)
+                pass
+                # print("\t", name)
 
     # Observe that all parameters are being optimized
     optimizer = optim.SGD(params_to_update, lr=START_LR, momentum=0.9)
@@ -49,7 +59,9 @@ def _main():
 
     best_valid_loss = float('inf')
 
-    writter = SummaryWriter(log_dir="./logs/v03")
+    writter = SummaryWriter(log_dir="./logs/%s" % EXP_NAME)
+    # copy current exp setting
+    copyfile("./cfg.py", os.path.join("./logs/%s" % EXP_NAME, "cfg.py"))
     for epoch in range(NUM_EPOCHS):
 
         start_time = time.monotonic()
@@ -71,7 +83,7 @@ def _main():
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
             save_dict = dict(model=model.state_dict(), optimizer=optimizer.state_dict())
-            torch.save(save_dict, 'pretrained-resnet101-best-model.pt')
+            torch.save(save_dict, '%s-best-model.pt' % EXP_NAME)
 
         end_time = time.monotonic()
         epoch_mins, epoch_secs = epoch_time(start_time, end_time)

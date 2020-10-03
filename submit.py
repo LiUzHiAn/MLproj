@@ -44,7 +44,7 @@ def _main():
     dataloader_test = DataLoader(dataset_test, batch_size=1)
 
     model = MyResNet("resnet101", pretrained=True, num_classes=3).to(DEVICE)
-    save_dict = torch.load("./pretrained-resnet101-best-model.pt")
+    save_dict = torch.load("./pretrained-resnet101-best-model_99.12.pt")
     model.load_state_dict(save_dict["model"])
 
     images, probs, results = get_predcitions(model, dataloader_test, DEVICE)
