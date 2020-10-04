@@ -4,7 +4,15 @@ from torchvision.models import resnet18, resnet34, resnet50, resnet101, resnet15
 import torchvision.transforms as T
 from PIL import Image
 import torch.nn as nn
-from utils import initialize_parameters
+
+
+def initialize_parameters(m):
+    if isinstance(m, nn.Conv2d):
+        nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
+        nn.init.constant_(m.bias.data, 0)
+    elif isinstance(m, nn.Linear):
+        nn.init.xavier_normal_(m.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.constant_(m.bias.data, 0)
 
 
 class MyResNet(nn.Module):

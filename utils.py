@@ -6,9 +6,9 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
-INDEX2SUBMITLABEL = {0: "normal", 1: "calling", 2: "smoking"}
-INDEX2LABEL = {0: "normal", 1: "phone", 2: "smoke"}
-LABEL2INDEX = {"normal": 0, "phone": 1, "smoke": 2}
+LABLE2SUBMITNAME = {0: "normal", 1: "calling", 2: "smoking"}
+LABLE2NAME = {0: "normal", 1: "phone", 2: "smoke"}
+NAME2LABLE = {"normal": 0, "phone": 1, "smoke": 2}
 
 
 def epoch_time(start_time, end_time):
@@ -29,15 +29,6 @@ def calculate_topk_accuracy(y_pred, y, k=2):
         acc_1 = correct_1 / batch_size
         acc_k = correct_k / batch_size
     return acc_1, acc_k
-
-
-def initialize_parameters(m):
-    if isinstance(m, nn.Conv2d):
-        nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
-        nn.init.constant_(m.bias.data, 0)
-    elif isinstance(m, nn.Linear):
-        nn.init.xavier_normal_(m.weight.data, gain=nn.init.calculate_gain('relu'))
-        nn.init.constant_(m.bias.data, 0)
 
 
 def plot_confusion_matrix(labels, pred_labels, classes):
