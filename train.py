@@ -7,21 +7,16 @@ from tensorboardX import SummaryWriter
 from cfg import *
 
 
-def _main():
-    splitter = TrainValSplitter(imgs_path_root="/home/liuzhian/hdd/datasets/hualu-cup/train")
+def main():
+    splitter = TrainValSplitter(imgs_path_root="./data/train")
     train_samples, val_samples = splitter.setup()
 
     dataset_train = MyDataset(train_samples, transforms=train_transforms)
     dataset_val = MyDataset(val_samples, transforms=test_transforms)
 
-    dataloader_train = DataLoader(dataset_train, shuffle=True, batch_size=BATCH_SIZE)
-    STEPS_PER_EPOCH = len(dataloader_train)
-    TOTAL_STEPS = NUM_EPOCHS * STEPS_PER_EPOCH
+    dataloader_train = DataLoader(dataset_train, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, shuffle=True)
 
-    dataloader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE)
-
-    # 可视化
-    # vis_dataset(dataset_train, 25)
+    dataloader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
 
     model = MyResNet("resnet101", pretrained=PRETRAIN, num_classes=3).to(DEVICE)
 
@@ -147,4 +142,4 @@ def evaluate(model, dataloader, criterion, DEVICE):
 
 
 if __name__ == '__main__':
-    _main()
+    main()
