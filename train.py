@@ -1,5 +1,5 @@
 from dataset.mydataset import *
-from model.resnet import *
+from model.cbam_resnet import ResidualNet
 import torch.optim as optim
 import time
 from utils import *
@@ -26,7 +26,7 @@ def _main():
 
     dataloader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
 
-    model = MyResNet("resnet101", pretrained=PRETRAIN, num_classes=3).to(DEVICE)
+    model = ResidualNet('ImageNet', depth=101, num_classes=3, att_type="CBAM").to(DEVICE)
 
     criterion = nn.CrossEntropyLoss().to(DEVICE)
 
