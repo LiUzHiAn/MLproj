@@ -166,15 +166,21 @@ class ResNet(nn.Module):
             elif key.split(".")[-1] == 'bias':
                 self.state_dict()[key][...] = 0
 
+        model_dict = self.state_dict()
+        # 1. filter out unnecessary keys
+        pretrained_dict = {k: v for k, v in pretrained_weights.items() if k in self.state_dict()}
+        del pretrained_dict["fc.weight"]
+        del pretrained_dict["fc.bias"]
+        # 2. overwrite entries in the existing state dict
+        model_dict.update(pretrained_dict)
+        self.load_state_dict(model_dict)
+
         # final fc weight
         init.xavier_normal_(self.fc.weight.data, gain=nn.init.calculate_gain('relu'))
         init.constant_(self.fc.bias.data, 0)
 
-        # 1. filter out unnecessary keys
-        pretrained_dict = {k: v for k, v in pretrained_weights.items() if k in self.state_dict()}
-        # 2. overwrite entries in the existing state dict
-        self.state_dict().update(pretrained_dict)
         print("done!")
+
     def _make_layer(self, block, planes, blocks, stride=1, att_type=None):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
