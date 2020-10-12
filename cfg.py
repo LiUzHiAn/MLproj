@@ -2,9 +2,8 @@ import torch
 from torchvision.transforms import transforms
 import PIL
 
-# DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-DEVICE = 'cpu'
-EXP_NAME = 'cbam_resnet101'
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+EXP_NAME = 'cbam_pretrained_resnet101'
 
 PRETRAIN = True
 NUM_EPOCHS = 80

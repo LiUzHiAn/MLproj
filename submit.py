@@ -1,3 +1,4 @@
+from model.cbam_pretrained_resnet import AttentionResNet
 import torch.nn.functional as F
 from model.resnet import *
 from dataset.mydataset import TestDataset
@@ -43,8 +44,8 @@ def _main():
     dataset_test = TestDataset(test_imgs_root="./data/test", transforms=test_transforms)
     dataloader_test = DataLoader(dataset_test, batch_size=1)
 
-    model = MyResNet("resnet101", pretrained=True, num_classes=3).to(DEVICE)
-    save_dict = torch.load("./pretrained-resnet101-best-model_99.12.pt")
+    model = AttentionResNet("resnet101", pretrained=True, num_classes=3).to(DEVICE)
+    save_dict = torch.load("./cbam_pretrained-resnet101-best-model_99.12.pt")
     model.load_state_dict(save_dict["model"])
 
     images, probs, results = get_predcitions(model, dataloader_test, DEVICE)

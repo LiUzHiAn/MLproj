@@ -1,3 +1,4 @@
+from model.cbam_pretrained_resnet import AttentionResNet
 from dataset.mydataset import *
 from model.cbam_resnet import ResidualNet
 import torch.optim as optim
@@ -26,7 +27,7 @@ def _main():
 
     dataloader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
 
-    model = ResidualNet('ImageNet', depth=101, num_classes=3, att_type="CBAM").to(DEVICE)
+    model = AttentionResNet("resnet101", pretrained=True, num_classes=3).to(DEVICE)
 
     criterion = nn.CrossEntropyLoss().to(DEVICE)
 
