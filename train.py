@@ -27,7 +27,7 @@ def _main():
 
     dataloader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
 
-    model = AttentionResNet("resnet101", pretrained=True, num_classes=3).to(DEVICE)
+    model = ResidualNet('ImageNet', depth=101, num_classes=3, att_type="CBAM", torch_pretrained=True).to(DEVICE)
 
     criterion = nn.CrossEntropyLoss().to(DEVICE)
 
