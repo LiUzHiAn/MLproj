@@ -133,26 +133,6 @@ class ResNet(nn.Module):
 
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
-        # TODO: dirty code, load failed below!
-        # pretrained_keys = pretrained_weights.keys()
-        # if pretrained_weights is not None:
-        #     for key in self.state_dict():
-        #         if key in pretrained_keys:  # 使用resnet中预训练的conv权值
-        #             self.state_dict()[key].data = pretrained_weights[key].data
-        #         elif "SpatialGate" in key:
-        #             # spatial gate 中的 conv权重
-        #             if "conv" in key:
-        #                 init.kaiming_normal_(self.state_dict()[key].data, nonlinearity='relu')
-        #             elif "bn" in key:
-        #                 init.constant_(self.state_dict()[key].data, 0.)
-        #         elif "ChannelGate" in key:
-        #             # channel gate中 MLP的weight
-        #             if "weight" in key:
-        #                 nn.init.xavier_normal_(self.state_dict()[key].data, gain=nn.init.calculate_gain('relu'))
-        #             # channel gate中 MLP的bias
-        #             elif "bias" in key:
-        #                 init.constant_(self.state_dict()[key].data, 0.)
-
         # initialize as CBAM official code
         for key in self.state_dict():
             if key.split('.')[-1] == "weight":
@@ -230,13 +210,14 @@ class ResNet(nn.Module):
 
 def ResidualNet(network_type, depth, num_classes, att_type, torch_pretrained=True):
     assert network_type in ["ImageNet", "CIFAR10", "CIFAR100"], "network type should be ImageNet or CIFAR10 / CIFAR100"
-    assert depth in [18, 34, 50, 101], 'network depth should be 18, 34, 50 or 101'
+    assert depth in [18, 34, 50, 101, 152], 'network depth should be 18, 34, 50 101 or 152 '
 
     # using pytorch pretrained weights on ImageNet
     model_map = {18: resnet18,
                  34: resnet34,
                  50: resnet50,
                  101: resnet101,
+                 152: resnet152,
                  }
     pretraind_weights = None
     if torch_pretrained:
@@ -254,11 +235,14 @@ def ResidualNet(network_type, depth, num_classes, att_type, torch_pretrained=Tru
     elif depth == 101:
         model = ResNet(Bottleneck, [3, 4, 23, 3], network_type, num_classes, att_type, pretraind_weights)
 
+    elif depth == 152:
+        model = ResNet(Bottleneck, [3, 8, 36, 3], network_type, num_classes, att_type, pretraind_weights)
+
     return model
 
 
 if __name__ == '__main__':
-    model = ResidualNet('ImageNet', depth=101, num_classes=3, att_type="CBAM", torch_pretrained=True)
+    model = ResidualNet('ImageNet', depth=152, num_classes=3, att_type="CBAM", torch_pretrained=True)
     dummy_input = torch.rand(4, 3, 224, 224)
     dummy_out = model(dummy_input)
     print(dummy_out.size())
