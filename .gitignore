@@ -4,6 +4,8 @@ mmdet-cfg/
 mmdet-result/
 
 vis/gradient_imgs
+vis/vgg19_grad_cam
+vis/vgg19_gbp
 
 .idea/
 .vscode/

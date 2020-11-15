@@ -1,6 +1,7 @@
-from model.cbam_pretrained_resnet import AttentionResNet
+# from model.cbam_pretrained_resnet import AttentionResNet
 from dataset.mydataset import *
-from model.cbam_resnet import ResidualNet
+# from model.cbam_resnet import ResidualNet
+from model.vgg_net import MyVGGNet
 import torch.optim as optim
 import time
 from utils import *
@@ -27,7 +28,8 @@ def _main():
 
     dataloader_val = DataLoader(dataset_val, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
 
-    model = ResidualNet('ImageNet', depth=101, num_classes=3, att_type="CBAM", torch_pretrained=True).to(DEVICE)
+    # model = ResidualNet('ImageNet', depth=101, num_classes=3, att_type="CBAM", torch_pretrained=True).to(DEVICE)
+    model = MyVGGNet("vgg19", pretrained=True, num_classes=3).to(DEVICE)
 
     criterion = nn.CrossEntropyLoss().to(DEVICE)
 
@@ -39,12 +41,12 @@ def _main():
         for name, param in model.named_parameters():
             if param.requires_grad == True:
                 params_to_update.append(param)
-                # print("\t", name)
+                print("\t", name)
     else:
         for name, param in model.named_parameters():
             if param.requires_grad == True:
-                pass
-                # print("\t", name)
+                # pass
+                print("\t", name)
 
     # Observe that all parameters are being optimized
     optimizer = optim.SGD(params_to_update, lr=START_LR, momentum=0.9)

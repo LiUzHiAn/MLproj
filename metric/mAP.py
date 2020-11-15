@@ -178,8 +178,6 @@ def plot_precision_reall_curve(predictions, gts,
         plt.savefig(save_path)
     if show_graph is True:
         plt.show()
-        plt.waitforbuttonpress()
-        # plt.pause(0.05)
     plt.close()
     return results
 

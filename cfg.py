@@ -3,13 +3,13 @@ from torchvision.transforms import transforms
 import PIL
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-EXP_NAME = 'cbam_pretrained_resnet101'
+EXP_NAME = 'pretrained_vgg19'
 
 PRETRAIN = True
 NUM_EPOCHS = 80
 START_LR = 1e-3
 N_IMAGES_VIS = 25
-BATCH_SIZE = 28
+BATCH_SIZE = 32
 # resize_size = 256
 spatial_size = 224
 pretrained_means = [0.485, 0.456, 0.406]

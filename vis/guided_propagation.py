@@ -10,14 +10,18 @@ import matplotlib.pyplot as plt
 class Guided_backprop:
     def __init__(self, model):
         self.model = model
-        self.image_recon = None
+        self.image_recon = []
         self.activation_maps = []
         self.model.eval()
         self.register_hooks()
 
     def register_hooks(self):
         def first_layer_hook_fn(module, grad_input, grad_output):
-            self.image_recon = grad_input[0]
+            for item in grad_output:
+                print(item.size())
+            self.image_recon.append(grad_input[0])
+            for item in grad_input:
+                print(item.size())
 
         def forward_hook_fn(module, input, output):
             # save the output of each ReLU layer,which is used for guided backpropagation then.
@@ -28,7 +32,7 @@ class Guided_backprop:
             guide = self.activation_maps.pop()
             # only use the "activated" positions
             guide[guide > 0] = 1
-
+            # discard negative grad
             pos_grad_output = torch.clamp(grad_output[0], min=0.0)
             new_grad_input = pos_grad_output * guide
 
@@ -41,7 +45,9 @@ class Guided_backprop:
                 module.register_forward_hook(forward_hook_fn)
                 module.register_backward_hook(backward_hook_fn)
 
-        first_layer = modules[2]
+        first_layer = modules[2]  # for resnet
+        # first_layer = modules[3]  # for vgg
+        # first_layer = list(self.model.model.features._modules.items())[0][1]
         first_layer.register_backward_hook(first_layer_hook_fn)
 
     def visualize(self, input_image, target_class):
@@ -94,7 +100,6 @@ def guided_propagation_resnet50(img_path, save_path):
     result = normalize(result)
     plt.imsave(save_path, result)
     # plt.show()
-
 
 # if __name__ == '__main__':
 #     guided_propagation_resnet50("./dog.jpeg", "./dog-vis.jpeg")
