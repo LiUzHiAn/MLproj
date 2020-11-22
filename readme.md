@@ -1,3 +1,5 @@
+本项目详细报告见 [>>此处<<](./doc/project_report.pdf)
+
 ## Prepare the datasets
 ```bash
 $ ln -s ${YOUR_TRAIN_DIR} ./data/train
