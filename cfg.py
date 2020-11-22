@@ -3,7 +3,7 @@ from torchvision.transforms import transforms
 import PIL
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-EXP_NAME = 'pretrained_vgg19'
+EXP_NAME = 'pretrained_resnet_noDataAug'
 
 PRETRAIN = True
 NUM_EPOCHS = 80
@@ -18,9 +18,9 @@ NUM_WORKERS = 32
 
 train_transforms = transforms.Compose([
     transforms.Resize((spatial_size, spatial_size)),
-    transforms.ColorJitter(hue=.05, saturation=.05),
-    transforms.RandomHorizontalFlip(),
-    transforms.RandomRotation(20, resample=PIL.Image.BILINEAR),
+    # transforms.ColorJitter(hue=.05, saturation=.05),
+    # transforms.RandomHorizontalFlip(),
+    # transforms.RandomRotation(20, resample=PIL.Image.BILINEAR),
     transforms.ToTensor(),
     transforms.Normalize(mean=pretrained_means,
                          std=pretrained_stds)

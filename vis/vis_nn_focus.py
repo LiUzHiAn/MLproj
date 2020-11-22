@@ -14,30 +14,28 @@ if __name__ == '__main__':
     dataset_test = TestDataset(test_imgs_root="../data/test", transforms=test_transforms)
     dataloader_test = DataLoader(dataset_test, batch_size=1)
 
-    model = MyResNet("resnet101", pretrained=True, num_classes=3).to(DEVICE)
-    save_dict = torch.load("../ckpt/pretrained-resnet101-best-model_99.12.pt")
+    model = MyResNet("resnet50", pretrained=True, num_classes=3).to(DEVICE)
+    save_dict = torch.load("../ckpt/pretrained_resnet50-best-model.pt")
 
-    # model = MyVGGNet("vgg19", pretrained=True, num_classes=3).to(DEVICE)
-    # save_dict = torch.load("../pretrained_vgg19-best-model.pt")
+    # model = MyVGGNet("vgg19", pretrained=True, num_classes=3).to("cpu")
+    # save_dict = torch.load("../pretrained_vgg19-best-model.pt", map_location="cpu")
 
     model.load_state_dict(save_dict["model"])
     guided_bp = Guided_backprop(model)
 
-    verbose = False
+    # verbose = False
 
-    plt_save_dir = "./gradient_imgs"
-    if not os.path.exists(plt_save_dir):
-        os.mkdir(plt_save_dir)
+    # plt_save_dir = "./gradient_imgs"
+    # if not os.path.exists(plt_save_dir):
+    #     os.mkdir(plt_save_dir)
 
     for sample in dataloader_test:
         x = sample[0].to(DEVICE).requires_grad_()
         result = guided_bp.visualize(x, None)
 
         result = normalize(result)
-
-        cv2.imshow("1", (result * 255).astype(np.uint8)[:, :, ::-1])
-        cv2.imshow("2", (result * 255).astype(np.uint8))
-        cv2.waitKey(0)
+        cv2.imwrite(os.path.join("resnet50_gbp", sample[1][0].split('/')[-1]),
+                   (result * 255).astype(np.uint8)[:, :, ::-1])
 
         # ========== 把输入和输出一并可视化 ===============
         # input_arr = np.transpose(

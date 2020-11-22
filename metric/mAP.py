@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
 import pandas as pd
+import pickle
 
 SUBMITNAME2LABLE = {"normal": 0, "calling": 1, "smoking": 2}
 LABLE2SUBMITNAME = {0: "normal", 1: "calling", 2: "smoking"}
@@ -88,6 +89,9 @@ def plot_precision_reall_curve(predictions, gts,
                                show_interpolated_precision=False,
                                save_path=None, show_graph=True):
     results = calc_mAP(predictions, gts, method)
+    # 保存数据到文件
+    pickle.dump(results, open("./pretrained_resnet50_noDataAug_map_stats.json", "wb"))
+
     colors = ["red", "blue", "green"]
     for idx, cls_result in enumerate(results):
         class_name = cls_result['class']
@@ -254,6 +258,47 @@ def ElevenPointInterpolatedAP(rec, prec):
     return [ap, rhoInterp, recallValues, None]
 
 
+def plot_curves_of_different_methods_in_single_figure():
+    """
+    把不同方法的3个类别的Precision-Recall 曲线画在一张图上，便于对比
+    :return:
+    """
+
+    # 加载数据文件
+    vgg19_res = pickle.load(open("./pretrained_vgg19_map_stats.json", "rb"))
+    resnet50_res = pickle.load(open("./pretrained_resnet50_map_stats.json", "rb"))
+    resnet101_res = pickle.load(open("./pretrained_resnet101_map_stats.json", "rb"))
+    methods = [vgg19_res, resnet50_res, resnet101_res]
+    # vgg19-red, resnet50-blue , resnet101-green
+    colors = [("red", "SCVGG-17"), ("blue", "SCResNet-50"), ("green", "SCResNet-101")]
+    class_line_style = {"normal": "solid", "smoking": "dotted", "calling": "dashdot"}
+
+    plt.figure(figsize=(10, 6))
+    for i, method_res in enumerate(methods):
+        curve_color = colors[i][0]
+        for idx, cls_result in enumerate(method_res):
+            class_name = cls_result['class']
+            precision = cls_result['precision']
+            recall = cls_result['recall']
+            average_precision = cls_result['AP']
+            ap_str = "{0:.2f}%".format(average_precision * 100)
+            mpre = cls_result['interpolated precision']
+            mrec = cls_result['interpolated recall']
+            npos = cls_result['total positives']
+            total_tp = cls_result['total TP']
+            total_fp = cls_result['total FP']
+
+            plt.plot(recall, precision, color=curve_color, linestyle=class_line_style[class_name],
+                     label='%s, Class: %s, AP:%s' % (colors[i][1], class_name, ap_str))
+            plt.xlabel('Recall')
+            plt.ylabel('Precision')
+            plt.title('Precision-Recall Curve')
+            plt.legend(shadow=True)
+            plt.grid()
+
+    plt.savefig("mAP_compare.pdf")
+
+
 def main():
     df_val = pd.read_csv('../resources/val.csv')
     val_samples = [tuple(x) for x in df_val.to_numpy()]
@@ -262,21 +307,24 @@ def main():
     for (img_path, label) in val_samples:
         gts[img_path] = label
 
-    with open("./result_val.json", "r") as f:
+    with open("pretrained_resnet50_noDataAug_validation_result.json", "r") as f:
         predictions = json.load(f)
 
     # res = calc_mAP(predictions, gts)
     # for cls_res in res:
     #     print("class: %s, AP: %.6f" % (cls_res["class"], cls_res["AP"]))
 
-    plot_precision_reall_curve(predictions, gts, save_path="./AP.png")
+    plot_precision_reall_curve(predictions, gts, save_path="./pretrained_resnet50_noDataAug.png")
 
 
 if __name__ == '__main__':
     main()
+
     # # test case
     # recall = [0.066] * 2 + [0.133] * 7 + [0.2] * 2 + [0.266] + [0.333] + [0.4] * 9 + [0.466] * 2
     # precision = [1, 0.5, 0.666, 0.5, 0.4, 0.333, 0.286, 0.25, 0.222, 0.3, 0.273, 0.333, 0.385,
     #              0.429, 0.4, 0.375, 0.353, 0.333, 0.316, 0.3, 0.286, 0.273, 0.304, 0.292]
     # res = CalculateAveragePrecision(recall, precision)
     # print(res)
+
+    # plot_curves_of_different_methods_in_single_figure()

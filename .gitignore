@@ -1,11 +1,10 @@
 ckpt/
 logs/
-mmdet-cfg/
-mmdet-result/
 
 vis/gradient_imgs
 vis/vgg19_grad_cam
 vis/vgg19_gbp
+vis/res*
 
 .idea/
 .vscode/
@@ -18,3 +17,7 @@ __pycache__/
 
 data/train
 data/test
+
+metric/*.png
+metric/*.pdf
+metric/*.md

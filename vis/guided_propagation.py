@@ -10,18 +10,14 @@ import matplotlib.pyplot as plt
 class Guided_backprop:
     def __init__(self, model):
         self.model = model
-        self.image_recon = []
+        self.image_recon = None
         self.activation_maps = []
         self.model.eval()
         self.register_hooks()
 
     def register_hooks(self):
         def first_layer_hook_fn(module, grad_input, grad_output):
-            for item in grad_output:
-                print(item.size())
-            self.image_recon.append(grad_input[0])
-            for item in grad_input:
-                print(item.size())
+            self.image_recon = grad_input[0]
 
         def forward_hook_fn(module, input, output):
             # save the output of each ReLU layer,which is used for guided backpropagation then.
@@ -47,7 +43,7 @@ class Guided_backprop:
 
         first_layer = modules[2]  # for resnet
         # first_layer = modules[3]  # for vgg
-        # first_layer = list(self.model.model.features._modules.items())[0][1]
+
         first_layer.register_backward_hook(first_layer_hook_fn)
 
     def visualize(self, input_image, target_class):
@@ -56,7 +52,7 @@ class Guided_backprop:
         pred_class = model_output.argmax().item()
 
         # generate one-hot code, as the starting point of back propagation
-        grad_target_map = torch.zeros(model_output.shape, dtype=torch.float).cuda()
+        grad_target_map = torch.zeros_like(model_output, dtype=torch.float)
 
         if target_class is not None:
             grad_target_map[0][target_class] = 1

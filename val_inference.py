@@ -3,8 +3,7 @@ from model.resnet import *
 from dataset.mydataset import TestDataset
 from torch.utils.data import Dataset, DataLoader
 from cfg import *
-import torch
-from pprint import pprint
+from model.vgg_net import MyVGGNet
 from utils import *
 import json
 import pandas as pd
@@ -13,13 +12,16 @@ from submit import get_predcitions
 
 
 def inference_on_validation_set():
-    df_val = pd.read_csv('../resources/val.csv')
+    import os
+    print(os.getcwd())
+    df_val = pd.read_csv("./resources/val.csv")
     val_samples = [tuple(x) for x in df_val.to_numpy()]
     dataset_val = MyDataset(val_samples, transforms=test_transforms)
     dataloader_val = DataLoader(dataset_val, batch_size=1)
 
-    model = MyResNet("resnet101", pretrained=True, num_classes=3).to(DEVICE)
-    save_dict = torch.load("./ckpt/resnet101-best-model_99.47.pt")
+    model = MyResNet("resnet50", pretrained=True, num_classes=3).to(DEVICE)
+    # model = MyVGGNet("vgg19", pretrained=True, num_classes=3).to(DEVICE)
+    save_dict = torch.load("./ckpt/pretrained_resnet50_noDataAug-best-model.pt")
     model.load_state_dict(save_dict["model"])
 
     model.eval()
@@ -41,7 +43,7 @@ def inference_on_validation_set():
             gts.append({"image_name": val_samples[idx][0],
                         "category": LABLE2SUBMITNAME[y.item()]})
 
-    with open("result_val.json", "w") as f:
+    with open("metric/pretrained_resnet50_noDataAug_validation_result.json", "w") as f:
         json.dump(results, f)
 
 
